@@ -434,6 +434,27 @@ struct Presenter {
 }
 
 impl Presenter {
+    #[cfg(target_arch = "wasm32")]
+    fn start(
+        _device: &wgpu::Device,
+        _queue: &wgpu::Queue,
+        _surface: Arc<wgpu::Surface<'static>>,
+        _window: Arc<winit::window::Window>,
+        _config: &wgpu::SurfaceConfiguration,
+    ) -> Self {
+        // Web build: no OS threads (a wasm worker pool would need co-ordination
+        // wgpu's browser backend does not give yet); the renderer presents inline
+        // by seeing `failed()` — the same path a dead native thread takes.
+        Self {
+            config: _config.clone(),
+            send: None,
+            free: mpsc::channel().1,
+            failed: Arc::new(AtomicBool::new(true)),
+            thread: None,
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     fn start(
         device: &wgpu::Device,
         queue: &wgpu::Queue,

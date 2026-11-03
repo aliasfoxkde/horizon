@@ -135,7 +135,7 @@ impl Game<'_> {
             self.pack_folder = None;
             return;
         }
-        let now = std::time::Instant::now();
+        let now = crate::Instant::now();
         if self
             .pack_folder
             .as_ref()

@@ -35,6 +35,21 @@ fn read_at(file: &fs::File, out: &mut [u8], at: u64) -> io::Result<usize> {
     return std::os::unix::fs::FileExt::read_at(file, out, at);
     #[cfg(windows)]
     return std::os::windows::fs::FileExt::seek_read(file, out, at);
+    // No position-based read in the browser FS: a plain seek would race the
+    // other readers' shared cursor, so save and restore it (read_at's callers
+    // on wasm are short and serialized).
+    #[cfg(target_arch = "wasm32")]
+    {
+        let mut file = file;
+        let pos = file.stream_position()?;
+        file.seek(SeekFrom::Start(at))?;
+        let read = file.read(out)?;
+        file.seek(SeekFrom::Start(pos))?;
+        if read != out.len() {
+            return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "short zip read"));
+        }
+        Ok(read)
+    }
 }
 /// The bytes of `file` from `start` to `end`.
 fn read_range(file: &fs::File, start: u64, end: u64) -> io::Result<Vec<u8>> {

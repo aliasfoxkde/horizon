@@ -7,7 +7,8 @@
 use horizon_threads::memory_limit::{self, Pressure};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
-use std::time::{Duration, Instant};
+use crate::Instant;
+use std::time::Duration;
 
 /// The command's name, which the chat box lists with the server's.
 pub const COMMAND: &str = "ramlimit";

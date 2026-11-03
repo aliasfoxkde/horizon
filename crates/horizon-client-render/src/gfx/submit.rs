@@ -9,7 +9,8 @@
 use std::ops::Deref;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Mutex, mpsc};
-use std::time::{Duration, Instant};
+use crate::Instant;
+use std::time::Duration;
 
 /// Whether frames go to the submit thread, unless `HORIZON_SUBMIT_THREAD` says (`0` off, `1` on):
 /// on Linux, where it was measured faster (+32% FPS in a CPU-bound view on Vulkan, #5779). On
@@ -66,9 +67,18 @@ impl Queue {
             landing: Mutex::new(None),
             waited: AtomicU64::new(0),
         };
+        // No OS threads on wasm: the browser queue submits inline (the
+        // renderer's `wanted` then never hands work to a thread).
         if !threaded {
             return this;
         }
+        #[cfg(target_arch = "wasm32")]
+        {
+            let _ = threaded;
+            return this;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
         let (jobs, job_rx) = mpsc::channel::<Job>();
         let (done_tx, done) = mpsc::channel();
         let queue = this.queue.clone();
@@ -98,6 +108,7 @@ impl Queue {
                 *this.lock() = Some(Landing { done, landed: None });
             }
             Err(e) => log::warn!("Horizon renderer: no submit thread ({e}); submitting in place"),
+        }
         }
         this
     }

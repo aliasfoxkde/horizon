@@ -12,7 +12,8 @@ use crate::{
     fast_hash::FxHashMap,
     world::World,
 };
-use std::time::{Duration, Instant};
+use crate::Instant;
+use std::time::Duration;
 
 /// The image's side in texels.
 pub const SIZE: usize = 128;

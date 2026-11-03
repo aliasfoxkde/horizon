@@ -86,9 +86,9 @@ impl Fixture {
     }
     fn finish_backup(&mut self) {
         self.title.backup_shown.set(true);
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let deadline = crate::Instant::now() + std::time::Duration::from_secs(5);
         while matches!(self.title.mode, Mode::Backup { .. }) {
-            assert!(std::time::Instant::now() < deadline);
+            assert!(crate::Instant::now() < deadline);
             std::thread::sleep(std::time::Duration::from_millis(10));
             self.title.poll_backup();
         }
@@ -1721,9 +1721,9 @@ fn chunk_version(file: &Path) -> i32 {
 }
 
 fn wait_while_optimizing(f: &mut Fixture) {
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+    let deadline = crate::Instant::now() + std::time::Duration::from_secs(10);
     while matches!(f.title.mode, Mode::Optimize { .. }) {
-        assert!(std::time::Instant::now() < deadline);
+        assert!(crate::Instant::now() < deadline);
         std::thread::sleep(std::time::Duration::from_millis(10));
         f.title.poll_backup();
     }

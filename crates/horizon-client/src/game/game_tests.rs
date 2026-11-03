@@ -28,7 +28,7 @@ use horizon_world::{
     level::flags,
     worldgen::structure::{BoundingBox, Mirror, Rotation, StructureTemplate},
 };
-use std::time::Instant;
+use crate::Instant;
 
 type Pos = (i32, i32, i32);
 

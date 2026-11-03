@@ -194,7 +194,7 @@ impl Game<'_> {
         } else {
             self.message = Some((
                 self.translate(KEY, "Click actions are disabled for this sign"),
-                std::time::Instant::now(),
+                crate::Instant::now(),
             ));
         }
     }

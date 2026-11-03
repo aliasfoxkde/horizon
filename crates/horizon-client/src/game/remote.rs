@@ -10023,9 +10023,9 @@ fn snapshot_value(s: &play::AttributeSnapshot) -> f64 {
 
 /// `Util.getMillis` for the level load tracker's timeouts.
 fn client_millis() -> u64 {
-    static ORIGIN: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+    static ORIGIN: std::sync::OnceLock<crate::Instant> = std::sync::OnceLock::new();
     ORIGIN
-        .get_or_init(std::time::Instant::now)
+        .get_or_init(crate::Instant::now)
         .elapsed()
         .as_millis() as u64
 }

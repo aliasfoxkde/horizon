@@ -146,7 +146,7 @@ pub struct UiState {
     /// `ChatScreen.isDraft`: the box opened with the draft and is unchanged since.
     pub chat_draft_shown: bool,
     /// When the chat screen opened (its input took the focus: the cursor blink).
-    pub chat_opened: Option<std::time::Instant>,
+    pub chat_opened: Option<crate::Instant>,
     /// The chat screen is `InBedChatScreen`: the sleeper's, with a Leave Bed button.
     pub in_bed_chat: bool,
     pub registries: Registries,
@@ -169,10 +169,10 @@ pub struct UiState {
     pub vanilla_root: std::path::PathBuf,
     /// Death screen cause and when the player died (buttons wait 20 ticks).
     pub death_text: Option<Text>,
-    pub died_at: Option<std::time::Instant>,
+    pub died_at: Option<crate::Instant>,
     /// `DeathScreen.TitleConfirmScreen` and when it opened (its buttons wait
     /// 20 ticks, `setDelay`).
-    pub death_confirm: Option<std::time::Instant>,
+    pub death_confirm: Option<crate::Instant>,
     /// `LivingEntity.deathTime` of the window's player: ticks since it died.
     pub death_time: u32,
 }
@@ -611,7 +611,7 @@ impl Game<'_> {
         );
         screen.auto_suggestions = self.settings.auto_suggestions;
         self.ui.chat_screen = Some(screen);
-        self.ui.chat_opened = Some(std::time::Instant::now());
+        self.ui.chat_opened = Some(crate::Instant::now());
         self.screen = Screen::Chat;
         self.keys.clear();
         self.left = false;
@@ -1386,7 +1386,7 @@ impl Game<'_> {
         let cause = self.ui.death_cause.take();
         let player = self.native_acting_id();
         self.native_player_died(player, cause.as_deref());
-        self.ui.died_at = Some(std::time::Instant::now());
+        self.ui.died_at = Some(crate::Instant::now());
         self.ui.death_text = None;
         self.ui.death_confirm = None;
         if !self.ui.rules.bool("show_death_messages") {

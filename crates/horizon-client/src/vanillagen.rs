@@ -62,7 +62,7 @@ pub struct VanillaTerrain {
     /// When the last proto chunk was generated, in milliseconds since
     /// `created`: the ring search waits for a pause in generation.
     last_proto: std::sync::atomic::AtomicU64,
-    created: std::time::Instant,
+    created: crate::Instant,
     /// A superflat generator (`FlatLevelSource`).
     flat: bool,
 }
@@ -300,7 +300,7 @@ impl VanillaTerrain {
             preset: preset.to_owned(),
             dimension: dimension.to_owned(),
             last_proto: std::sync::atomic::AtomicU64::new(0),
-            created: std::time::Instant::now(),
+            created: crate::Instant::now(),
             flat: false,
         })
     }
@@ -681,7 +681,7 @@ pub fn shared_data_with(
     {
         return Ok(data.clone());
     }
-    let started = std::time::Instant::now();
+    let started = crate::Instant::now();
     let data = GeneratorData::load_with(dir, registry, overrides)?;
     log::info!("Horizon: worldgen data loaded in {:?}", started.elapsed());
     for warning in data.warnings() {

@@ -12,7 +12,7 @@ use horizon_client::{
     keymapping::SNEAK,
 };
 use serde_json::{Value, json};
-use std::time::Instant;
+use crate::Instant;
 use winit::keyboard::KeyCode;
 
 pub(super) const HELP: &[&str] = &[

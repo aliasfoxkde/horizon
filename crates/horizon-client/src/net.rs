@@ -1058,7 +1058,7 @@ pub fn ping(address: &str, timeout: Duration) -> Result<(serde_json::Value, u128
         }
         _ => return Err("unexpected status reply".into()),
     };
-    let start = std::time::Instant::now();
+    let start = crate::Instant::now();
     c.send(&status::Serverbound::PingRequest(status::Ping { time: 1 }).encode())
         .map_err(e)?;
     let _ = c.recv().map_err(e)?;
@@ -1379,7 +1379,7 @@ mod tests {
                 debug: false,
                 far: Arc::default(),
             };
-            let started = std::time::Instant::now();
+            let started = crate::Instant::now();
             if explicit_disconnect {
                 session.disconnect();
                 session.disconnect(); // Repeated cleanup is harmless.

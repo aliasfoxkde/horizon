@@ -7,11 +7,12 @@ use crate::lan::discovery::Scanner;
 use crate::text::{DARK_GRAY, GRAY, Text, format_translation};
 use crate::title::confirm_top;
 use horizon_protocol::servers::{self, ServerEntry};
+use crate::Instant;
 use std::{
     collections::HashMap,
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 const SERVER_NAME: crate::clipboard::FieldId = ("server.name", 0);
@@ -1368,7 +1369,7 @@ impl Screen {
                     centered(batch, line, half(h) - 16.0 + i as f32 * 9.0, u32::MAX);
                 }
                 if let Some(r) = retry {
-                    let text = r.text(std::time::Instant::now());
+                    let text = r.text(crate::Instant::now());
                     centered(batch, &text, half(h) + 16.0, rgba(170, 170, 170, 255));
                 }
             }
@@ -1777,7 +1778,7 @@ impl Screen {
         let Self::Disconnected { retry, .. } = self else {
             return None;
         };
-        if !retry.as_ref()?.due(std::time::Instant::now()) {
+        if !retry.as_ref()?.due(crate::Instant::now()) {
             return None;
         }
         retry.take()

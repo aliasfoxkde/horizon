@@ -8,7 +8,7 @@ use horizon_client::{
     hud::{EndPortalFill, HudBatch},
     win_screen::{Key, WinScreen},
 };
-use std::time::Instant;
+use crate::Instant;
 use winit::{
     event::{ElementState, KeyEvent},
     keyboard::{KeyCode, PhysicalKey},

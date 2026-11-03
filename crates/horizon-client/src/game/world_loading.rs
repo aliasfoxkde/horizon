@@ -348,7 +348,7 @@ enum Preload {
     /// the player last left the world screens.
     Started {
         thread: std::thread::JoinHandle<()>,
-        left: Option<std::time::Instant>,
+        left: Option<crate::Instant>,
     },
     /// A world opened: the data is the world's now, and stays.
     Used,
@@ -405,7 +405,7 @@ pub(super) fn preload_world_data(
         Preload::Idle => {}
         Preload::Started { left, .. } if on_world_screens => *left = None,
         Preload::Started { thread, left } => {
-            let left = *left.get_or_insert_with(std::time::Instant::now);
+            let left = *left.get_or_insert_with(crate::Instant::now);
             if left.elapsed() >= PRELOAD_KEPT && thread.is_finished() {
                 horizon_client::vanillagen::forget_shared_data();
                 horizon_client::structure_blocks::forget_loot_data();
@@ -443,7 +443,7 @@ pub(super) fn preload_launch_world(
         .name("World data preload".into())
         .spawn(move || {
             // Not behind the server: the world's opening waits for it.
-            let started = std::time::Instant::now();
+            let started = crate::Instant::now();
             // Errors are left for the world opening to report. The world's
             // flags from its level.dat: the feature packs a flag forces on.
             let enabled_features = horizon_client::save::Level::read(&world_root)

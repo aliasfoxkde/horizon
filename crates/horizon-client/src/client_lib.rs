@@ -2,6 +2,13 @@
 //! bindings between the validated simulation pieces and the game loop.
 #![forbid(unsafe_code)]
 extern crate self as horizon_client;
+
+/// The frame timers' instant: `web_time` on wasm (winit's `ControlFlow::WaitUntil`
+/// carries `web_time::Instant` there), `std` elsewhere.
+#[cfg(target_arch = "wasm32")]
+pub use web_time::Instant;
+#[cfg(not(target_arch = "wasm32"))]
+pub use std::time::Instant;
 pub mod advancements;
 pub mod ambience;
 pub mod animate_tick;
@@ -52,6 +59,9 @@ pub mod debug_overlay;
 pub mod debugworld;
 pub mod dialog;
 pub mod dialog_screen;
+// Rich Presence speaks to the Discord desktop app over a local socket; the
+// browser has neither Unix sockets nor named pipes.
+#[cfg(not(target_arch = "wasm32"))]
 pub mod discord_presence;
 pub mod end_crystal;
 pub mod end_gateway;

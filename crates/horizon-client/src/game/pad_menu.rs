@@ -30,7 +30,7 @@ use horizon_client::{
     screen_narrator::InputType,
     widgets::{self, Kind, Target},
 };
-use std::time::Instant;
+use crate::Instant;
 use winit::{
     dpi::PhysicalPosition,
     event::{DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, WindowEvent},

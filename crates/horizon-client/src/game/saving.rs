@@ -1,10 +1,11 @@
 //! The save screen freezes simulation, but keeps pumping window events while
 //! snapshots are prepared in small batches and the region workers drain.
+use crate::Instant;
 use super::{Game, loading_frame};
 use horizon_client::{Result, hud::HudBatch};
 use std::{
     collections::{HashSet, VecDeque},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 pub(super) struct ClosingSave {

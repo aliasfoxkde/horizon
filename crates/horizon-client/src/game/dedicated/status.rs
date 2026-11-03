@@ -3,12 +3,13 @@
 //! and the loaded chunks; `console <line>` runs a console command and answers with the lines it logged;
 //! `server-events <since>` answers the typed events after that number (events.rs); `management <connection>
 //! <json>` edits the lists as vanilla's management protocol does (management.rs).
+use crate::Instant;
 use super::{ServerState, capture_log};
 use crate::game::Game;
 use serde_json::{Value, json};
 use std::{
     sync::atomic::Ordering,
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 /// The window the tick rate is measured over.

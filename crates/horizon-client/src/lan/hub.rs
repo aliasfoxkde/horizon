@@ -3916,14 +3916,14 @@ mod tests {
     fn the_owner_is_listed_with_the_accounts_skin_once_fetched() {
         let (answer, fetched) = std::sync::mpsc::channel();
         let profile = super::super::OwnerProfile::new(move || fetched.recv().unwrap_or_default());
-        let start = std::time::Instant::now();
+        let start = crate::Instant::now();
         assert!(listed_properties(&[], true, Some(&profile)).is_empty());
         assert!(start.elapsed() < std::time::Duration::from_millis(500));
         answer.send(vec![textures("owner")]).unwrap();
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let deadline = crate::Instant::now() + std::time::Duration::from_secs(5);
         while listed_properties(&[], true, Some(&profile)).is_empty() {
             assert!(
-                std::time::Instant::now() < deadline,
+                crate::Instant::now() < deadline,
                 "the fetch never landed"
             );
             std::thread::yield_now();
@@ -3941,10 +3941,10 @@ mod tests {
         // No signed-in account (no fetch): as before.
         assert!(listed_properties(&[], true, None).is_empty());
         let failed = super::super::OwnerProfile::new(Vec::new);
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let deadline = crate::Instant::now() + std::time::Duration::from_secs(5);
         while failed.properties.get().is_none() {
             let _ = failed.properties();
-            assert!(std::time::Instant::now() < deadline);
+            assert!(crate::Instant::now() < deadline);
             std::thread::yield_now();
         }
         assert!(listed_properties(&[], true, Some(&failed)).is_empty());
@@ -4036,7 +4036,7 @@ mod tests {
             ] {
                 let sent = FxHashSet::default();
                 let mut queue = Vec::new();
-                let start = std::time::Instant::now();
+                let start = crate::Instant::now();
                 let moves = 200;
                 for step in 0..moves {
                     // Nothing sent yet (an explorer waiting on generation).

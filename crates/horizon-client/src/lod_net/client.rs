@@ -4,6 +4,7 @@
 //! ([`Inbox::requests`]), and waits for its reply, which the network thread
 //! hands over ([`Inbox::deliver`]), within the server's [`Offer`]. A tile
 //! refused, lost or unreadable comes back as no columns: `Lod` asks again.
+use crate::Instant;
 use super::{Bucket, Offer, Request, SIDE, decode_reply, reply_id};
 use crate::lod::{Column, Surface};
 use crate::streaming::{LodSampler, LodSource};
@@ -14,7 +15,7 @@ use std::{
         atomic::{AtomicUsize, Ordering},
         mpsc,
     },
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 /// How long a client waits for a tile before asking again.

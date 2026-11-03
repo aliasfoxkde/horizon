@@ -11,7 +11,8 @@ use crate::{
     sprites::SpriteAnimation,
 };
 use glam::{DVec3, Mat4, Vec3, Vec4};
-use std::{collections::HashMap, path::PathBuf, sync::Arc, time::Instant};
+use crate::Instant;
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use wgpu::util::DeviceExt;
 use winit::window::Window;
 
@@ -359,10 +360,10 @@ struct SectionGpu {
     /// When it began to fade in over the far terrain it replaces, which
     /// stays whole behind it until then: a section new where far tiles are
     /// drawn. Meshed again, it stays as it was.
-    fading: Option<std::time::Instant>,
+    fading: Option<crate::Instant>,
     /// When it began to fade out, its column gone over far terrain that
     /// stays behind it (`Renderer::leave_section`); released once it has.
-    leaving: Option<std::time::Instant>,
+    leaving: Option<crate::Instant>,
     /// Animated sprite layers present in this section.
     animated_layers: Box<[u16]>,
 }
@@ -383,7 +384,7 @@ impl SectionGpu {
     /// Its fade code this frame (`lod::fade_code`), 0 once whole. `retiring`:
     /// its column has left the render distance, far terrain is coming in
     /// under it (`lod::HELD`).
-    fn fade(&self, now: std::time::Instant, retiring: bool) -> u32 {
+    fn fade(&self, now: crate::Instant, retiring: bool) -> u32 {
         match self.leaving {
             Some(since) => lod::fade_out_code(since, 0, now),
             None if retiring => lod::HELD,
@@ -910,7 +911,7 @@ pub struct Renderer {
     /// Removed sections of `lod_cutout` columns, released once tiles cover them.
     lod_retiring: crate::fast_hash::FxHashSet<SectionKey>,
     /// Removed sections fading out over far terrain (`leave_section`).
-    lod_leaving: Vec<(SectionKey, std::time::Instant)>,
+    lod_leaving: Vec<(SectionKey, crate::Instant)>,
     /// Finished tile meshes `upload_lods` has yet to upload.
     lod_pending: Option<lod::Pending>,
     detail_columns: crate::fast_hash::FxHashMap<(i32, i32), SectionMask>,
@@ -965,13 +966,13 @@ pub struct Renderer {
     block_entities: crate::fast_hash::FxHashMap<SectionKey, Vec<([i32; 3], u32)>>,
     /// When each section was first uploaded (`RenderSection.uploadedTime`): kept across meshing
     /// it again, gone with its column. Sections that fade in over far terrain are not in it.
-    section_uploaded: crate::fast_hash::FxHashMap<SectionKey, std::time::Instant>,
+    section_uploaded: crate::fast_hash::FxHashMap<SectionKey, crate::Instant>,
     /// When `section_uploaded` last gained a section: once the fade time has passed since,
     /// every section is whole and frames skip the per-section lookups.
-    newest_upload: Option<std::time::Instant>,
+    newest_upload: Option<crate::Instant>,
     /// When a section last began to fade in over far terrain (`SectionGpu::fading`), for the
     /// same shortcut.
-    newest_lod_fade: Option<std::time::Instant>,
+    newest_lod_fade: Option<crate::Instant>,
     /// Changes whenever `block_entities` does (unique across renderers).
     block_entity_revision: u64,
     /// The light sources of each section and their revision, for `block_light`.
@@ -1701,12 +1702,12 @@ async fn open_backend(
         memory_hints: wgpu::MemoryHints::MemoryUsage,
         ..Default::default()
     };
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(not(any(target_os = "macos", target_arch = "wasm32")))]
     let opened = match info.backend {
         wgpu::Backend::Vulkan => horizon_hdr::open_vulkan_device(&adapter, &desc),
         _ => None,
     };
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_arch = "wasm32"))]
     let opened = None;
     let opened = match opened {
         Some(opened) => opened,
@@ -4065,14 +4066,14 @@ impl Renderer {
         let fading = match self.sections.find(key) {
             Some(old) => old.fading,
             None if !self.lods.is_empty() => {
-                let now = std::time::Instant::now();
+                let now = crate::Instant::now();
                 self.newest_lod_fade = Some(now);
                 Some(now)
             }
             None => None,
         };
         if fading.is_none() && !self.section_uploaded.contains_key(&key) {
-            let now = std::time::Instant::now();
+            let now = crate::Instant::now();
             self.section_uploaded.insert(key, now);
             self.newest_upload = Some(now);
         }
@@ -4412,7 +4413,7 @@ impl Renderer {
         fade_seconds: f32,
     ) -> impl Iterator<Item = &([i32; 3], u32)> {
         let fade = fade_millis(fade_seconds);
-        let now = std::time::Instant::now();
+        let now = crate::Instant::now();
         let all = !self.sections_fading_in(fade, now);
         self.block_entities
             .iter()
@@ -4424,7 +4425,7 @@ impl Renderer {
     }
     /// Whether a section may still be fading in over `fade_ms` (vanilla's chunk fade): one was
     /// uploaded more recently than that. Otherwise every section is whole.
-    fn sections_fading_in(&self, fade_ms: u64, now: std::time::Instant) -> bool {
+    fn sections_fading_in(&self, fade_ms: u64, now: crate::Instant) -> bool {
         fade_ms > 0
             && self
                 .newest_upload
@@ -4432,7 +4433,7 @@ impl Renderer {
     }
     /// Whether a section may be fading in or out over far terrain (`SectionGpu::fade`):
     /// otherwise every section's code is 0.
-    fn sections_fading_over_lods(&self, now: std::time::Instant) -> bool {
+    fn sections_fading_over_lods(&self, now: crate::Instant) -> bool {
         !self.lod_retiring.is_empty()
             || !self.lod_leaving.is_empty()
             || self
@@ -4440,7 +4441,7 @@ impl Renderer {
                 .is_some_and(|t| now.saturating_duration_since(t) < lod::FADE)
     }
     /// Milliseconds since `key` was uploaded; a section not in `section_uploaded` is old.
-    fn section_elapsed_ms(&self, key: SectionKey, now: std::time::Instant) -> u64 {
+    fn section_elapsed_ms(&self, key: SectionKey, now: crate::Instant) -> u64 {
         self.section_uploaded.get(&key).map_or(u64::MAX, |t| {
             now.saturating_duration_since(*t).as_millis() as u64
         })
@@ -4572,7 +4573,7 @@ impl Renderer {
     /// away at once, the column's detail dropped to the far terrain's in one
     /// frame.
     fn leave_section(&mut self, key: SectionKey) {
-        let now = std::time::Instant::now();
+        let now = crate::Instant::now();
         if let Some(section) = self.sections.find_mut(key)
             && section.leaving.is_none()
         {
@@ -4581,7 +4582,7 @@ impl Renderer {
         }
     }
     /// Releases the sections that have faded out (`leave_section`).
-    fn release_left(&mut self, now: std::time::Instant) {
+    fn release_left(&mut self, now: crate::Instant) {
         let mut done = Vec::new();
         self.lod_leaving.retain(|&(key, since)| {
             let left = now.saturating_duration_since(since) >= lod::FADE;
@@ -5769,7 +5770,7 @@ impl Renderer {
                 &mut visible,
             )
         });
-        let now = std::time::Instant::now();
+        let now = crate::Instant::now();
         let mut visible_lods = std::mem::take(&mut self.visible_lods);
         visible_lods.clear();
         if frame.title {
@@ -9030,7 +9031,8 @@ mod tests {
     #[test]
     fn shrinking_starts_once_terrain_has_settled() {
         use super::{COMPACT_BUDGET, SHRINK_RETRY, SHRINK_SETTLE, ShrinkGate};
-        use std::time::{Duration, Instant};
+        use crate::Instant;
+use std::time::{Duration};
         let (now, ms) = (Instant::now(), Duration::from_millis(1));
         let mut gate = ShrinkGate::default();
         assert!(gate.may_start(now, COMPACT_BUDGET));
@@ -9844,7 +9846,7 @@ struct DisplayWatch {
     wayland: Option<horizon_hdr::wayland::Watch>,
     /// Without Wayland's event, what wgpu last read and when to read it again: the OS
     /// sends no event for a moved window or a changed SDR brightness slider.
-    polled: Option<(Option<crate::graphics::Reported>, std::time::Instant)>,
+    polled: Option<(Option<crate::graphics::Reported>, crate::Instant)>,
 }
 /// How often [`DisplayWatch`] reads the OS's values again where no event says they changed.
 const DISPLAY_POLL: std::time::Duration = std::time::Duration::from_secs(2);
@@ -9869,7 +9871,7 @@ impl DisplayWatch {
         let watch = Self {
             #[cfg(target_os = "linux")]
             wayland: None,
-            polled: Some((now, std::time::Instant::now() + DISPLAY_POLL)),
+            polled: Some((now, crate::Instant::now() + DISPLAY_POLL)),
         };
         (watch, now)
     }
@@ -9884,7 +9886,7 @@ impl DisplayWatch {
             return wayland.changed().map(|now| now.map(reported));
         }
         let (last, next) = self.polled.as_mut()?;
-        let time = std::time::Instant::now();
+        let time = crate::Instant::now();
         if time < *next {
             return None;
         }
@@ -9905,8 +9907,8 @@ impl DisplayWatch {
 /// held that long, and only the one they settled on is logged.
 struct DisplayLog {
     last: String,
-    at: Option<std::time::Instant>,
-    pending: Option<(String, std::time::Instant)>,
+    at: Option<crate::Instant>,
+    pending: Option<(String, crate::Instant)>,
 }
 static DISPLAY_LOG: std::sync::Mutex<DisplayLog> = std::sync::Mutex::new(DisplayLog {
     last: String::new(),
@@ -9915,7 +9917,7 @@ static DISPLAY_LOG: std::sync::Mutex<DisplayLog> = std::sync::Mutex::new(Display
 });
 const DISPLAY_LOG_QUIET: std::time::Duration = std::time::Duration::from_secs(1);
 fn log_display(line: String) {
-    let now = std::time::Instant::now();
+    let now = crate::Instant::now();
     let mut log = DISPLAY_LOG
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -9931,7 +9933,7 @@ fn log_display(line: String) {
 /// Logs a change [`log_display`] held back, once the values have held for
 /// [`DISPLAY_LOG_QUIET`].
 fn flush_display_log() {
-    let now = std::time::Instant::now();
+    let now = crate::Instant::now();
     let mut log = DISPLAY_LOG
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);

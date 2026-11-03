@@ -1074,7 +1074,7 @@ mod tests {
             .map(|i| (format!("t:f{}", i % 25_000), true))
             .collect();
         store.function_tags.insert("t:big".into(), big);
-        let start = std::time::Instant::now();
+        let start = crate::Instant::now();
         let got = store.tag_functions("t:big");
         assert_eq!(got.len(), 25_000);
         assert_eq!(got[0], "t:f0");

@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 
 #[global_allocator]
+#[cfg(not(target_arch = "wasm32"))]
 static ALLOCATOR: horizon_threads::Allocator = horizon_threads::Allocator;
 
 /// The mod API level this game serves, kept in the program for the launcher

@@ -1,4 +1,5 @@
 //! Commands from the control socket (`horizon-ctl`), run on the game thread.
+use crate::Instant;
 use super::event_loop::EventLoopCtl;
 use super::{Game, Screen};
 use horizon_client::{Result, items::ItemStack};
@@ -6,7 +7,8 @@ use horizon_core::geometry::Vec3;
 use serde_json::{Value, json};
 use std::{
     sync::mpsc::Sender,
-    time::{Duration, Instant},
+    time::Duration,
+    /* Instant from crate root */
 };
 use winit::{event::MouseButton, keyboard::KeyCode};
 

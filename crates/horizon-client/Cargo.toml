@@ -44,6 +44,9 @@ horizon-narrator = { path = "../horizon-narrator" }
 horizon-mods = { path = "../horizon-mods", default-features = false, features = ["index"] }
 wgpu = { version = "30.0.1", default-features = false, features = ["std", "parking_lot", "vulkan", "metal", "wgsl", "naga-ir"] }
 winit = "0.30.13"
+# winit's ControlFlow::WaitUntil carries web_time::Instant on wasm — the
+# game's frame timers use the same alias there (std::time elsewhere).
+web-time = "1"
 pollster = "0.4"
 bytemuck = { version = "1.24", features = ["derive"] }
 glam = "0.30"
@@ -74,7 +77,9 @@ horizon-dualsense = { path = "../horizon-dualsense", optional = true }
 # HTTPS to the Minecraft services (online-mode session join).
 ureq = { version = "2", default-features = false, features = ["tls"] }
 unicode-bidi = "0.3.18"
-# `LevelStorageAccess.estimateDiskSpace`: usable disk space, without unsafe code on Windows.
+# `LevelStorageAccess.estimateDiskSpace`: usable disk space, without unsafe code on
+# Windows. No statfs in the browser, so wasm gets the u64::MAX fallback instead.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 fs4 = { version = "1.1.0", default-features = false, features = ["sync"] }
 
 [target.'cfg(unix)'.dependencies]

@@ -1349,7 +1349,7 @@ mod tests {
             return;
         };
         let data = root.join("data");
-        let t = std::time::Instant::now();
+        let t = crate::Instant::now();
         let tree = Tree::load(&data);
         let load = t.elapsed();
         let tags = data.join("minecraft/tags/item");
@@ -1368,7 +1368,7 @@ mod tests {
                 Some((name, values.collect()))
             })
             .collect();
-        let t = std::time::Instant::now();
+        let t = crate::Instant::now();
         let index = InventoryIndex::build(&tree, |tag| {
             tag_items
                 .get(tag)
@@ -1391,7 +1391,7 @@ mod tests {
             "minecraft:stick",
             "minecraft:coal",
         ];
-        let t = std::time::Instant::now();
+        let t = crate::Instant::now();
         let mut candidates = 0;
         for _ in 0..1000 {
             candidates = index.candidates(held).len();

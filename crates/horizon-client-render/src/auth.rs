@@ -401,7 +401,7 @@ const KEY_RETRY: Duration = Duration::from_secs(60 * 60);
 struct ChatKeys {
     current: Option<Arc<ChatKeyPair>>,
     fetching: bool,
-    next_try: Option<std::time::Instant>,
+    next_try: Option<crate::Instant>,
 }
 static CHAT_KEYS: Mutex<ChatKeys> = Mutex::new(ChatKeys {
     current: None,
@@ -417,7 +417,7 @@ pub fn prepare_chat_keys(now: bool) {
         return;
     };
     let mut keys = CHAT_KEYS.lock().unwrap();
-    let instant = std::time::Instant::now();
+    let instant = crate::Instant::now();
     if keys.fetching || !now && keys.next_try.is_some_and(|t| instant < t) {
         return;
     }

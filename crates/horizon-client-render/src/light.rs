@@ -1969,7 +1969,7 @@ mod tests {
             rng ^= rng << 5;
             (rng % n as u32) as i32
         };
-        let start = std::time::Instant::now();
+        let start = crate::Instant::now();
         let mut changed = LightChanges::default();
         for round in 0..400 {
             let state = [TORCH, SLAB, AIR][round % 3];
@@ -1991,7 +1991,7 @@ mod tests {
     #[test]
     #[ignore = "benchmark"]
     fn benchmark_light_chunk() {
-        use std::time::Instant;
+        use crate::Instant;
         let t = tables();
         let layout = ColumnLayout::VANILLA;
         let mut chunks = Vec::new();

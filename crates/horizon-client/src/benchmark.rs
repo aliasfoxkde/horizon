@@ -9,7 +9,8 @@
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Sender};
 use std::thread;
-use std::time::{Duration, Instant};
+use crate::Instant;
+use std::time::Duration;
 
 use horizon_bench::{App, Frames, Kind, Report};
 use serde_json::Value;

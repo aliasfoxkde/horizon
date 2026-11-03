@@ -272,8 +272,15 @@ pub fn downgraded_from(world: &Path) -> Option<String> {
 pub const LOW_DISK_SPACE: u64 = 67_108_864;
 /// `LevelStorageAccess.estimateDiskSpace`: the usable bytes of the disk holding `dir`
 /// (`FileStore.getUsableSpace`), `u64::MAX` when it cannot be asked.
+#[cfg(not(target_arch = "wasm32"))]
 pub fn estimate_disk_space(dir: &Path) -> u64 {
     fs4::available_space(dir).unwrap_or(u64::MAX)
+}
+
+/// No statfs in the browser: report "plenty" rather than fail the check.
+#[cfg(target_arch = "wasm32")]
+pub fn estimate_disk_space(_dir: &Path) -> u64 {
+    u64::MAX
 }
 /// `LevelStorageAccess.checkForLowDiskSpace`.
 pub fn low_disk_space(dir: &Path) -> bool {
@@ -2371,7 +2378,7 @@ fn is_forced_ticket(ticket: &Tag) -> bool {
 }
 #[derive(Default)]
 struct LodDecoded {
-    chunks: crate::fast_hash::FxHashMap<(i32, i32), (std::time::Instant, LodSurfaces)>,
+    chunks: crate::fast_hash::FxHashMap<(i32, i32), (crate::Instant, LodSurfaces)>,
     order: std::collections::VecDeque<(i32, i32)>,
 }
 /// Saved chunks kept decoded for far terrain (each tens of kilobytes), and
@@ -2381,7 +2388,7 @@ const LOD_DECODED_TTL: std::time::Duration = std::time::Duration::from_secs(30);
 /// A region file's saved chunks (bit `x + z * 32`), `None` without the file,
 /// as of `checked`.
 struct LodRegion {
-    checked: std::time::Instant,
+    checked: crate::Instant,
     chunks: Option<[u64; 16]>,
 }
 /// How long far terrain trusts a region file's chunk list: chunks saved after
@@ -2527,7 +2534,7 @@ impl SaveDir {
             regions.insert(
                 key,
                 LodRegion {
-                    checked: std::time::Instant::now(),
+                    checked: crate::Instant::now(),
                     chunks,
                 },
             );
@@ -4814,7 +4821,7 @@ impl SaveDir {
         }
         let columns = self.lod_surfaces(x, z, assets, biomes)?;
         let mut decoded = self.lod_decoded.lock().unwrap();
-        let fresh = (std::time::Instant::now(), columns.clone());
+        let fresh = (crate::Instant::now(), columns.clone());
         if decoded.chunks.insert((x, z), fresh).is_none() {
             decoded.order.push_back((x, z));
             while decoded.order.len() > LOD_DECODED {

@@ -7,7 +7,8 @@ use crate::{
     hud::{HudAtlas, HudBatch, rgba},
     lang,
 };
-use std::{cell::Cell, time::Instant};
+use crate::Instant;
+use std::cell::Cell;
 
 /// `AccessibilityOnboardingScreen.TEXT_WIDGET_WIDTH`.
 const TEXT_WIDTH: f32 = 374.0;

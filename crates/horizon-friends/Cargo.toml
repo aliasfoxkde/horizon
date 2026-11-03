@@ -12,12 +12,21 @@ chacha20poly1305 = "0.10"
 hkdf = "0.12"
 sha2 = "0.10"
 getrandom = "0.3"
-# SO_REUSEADDR/SO_REUSEPORT for the direct socket (TCP simultaneous open).
-socket2 = { version = "0.5", features = ["all"] }
-# This machine's addresses (LAN, VPNs such as Tailscale or ZeroTier, IPv6) for the code.
-if-addrs = "0.13"
+# Session/wire types are serde on every target.
 serde = { version = "1", features = ["derive"] }
 serde_json = "1.0.151"
+# SO_REUSEADDR/SO_REUSEPORT for the direct socket (TCP simultaneous open).
+# Raw socket control (reuse address/port, bind before connect) — no sockets
+# of this kind in the browser, where direct play stays on the relay instead.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+socket2 = { version = "0.5", features = ["all"] }
+# This machine's addresses (LAN, VPNs such as Tailscale or ZeroTier, IPv6) for the code.
+# No interface enumeration in the browser — wasm gets an empty list.
+if-addrs = "0.13"
+
+# Web build: browser entropy backends for the wasm graph (see web-support).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+web-support = { path = "../web-support" }
 
 [lints]
 workspace = true

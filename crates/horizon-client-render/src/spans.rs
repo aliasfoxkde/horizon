@@ -5,10 +5,11 @@
 //! thread's CPU time inside it, so a span that waited (for a lock, the GPU
 //! or a core on a busy machine) shows apart from one that worked. Costs two
 //! clock reads per span when enabled and a relaxed load otherwise.
+use crate::Instant;
 use std::{
     cell::RefCell,
     sync::atomic::{AtomicBool, Ordering},
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 static ENABLED: AtomicBool = AtomicBool::new(false);
@@ -129,8 +130,9 @@ pub mod startup {
             Mutex, OnceLock,
             atomic::{AtomicBool, AtomicU32, Ordering},
         },
-        time::Instant,
     };
+
+    use crate::Instant;
 
     static ON: AtomicBool = AtomicBool::new(false);
     static SINK: OnceLock<Option<Mutex<std::fs::File>>> = OnceLock::new();
@@ -347,7 +349,7 @@ mod tests {
         // Busy until the clock shows 10 ms of work (a loaded machine gives
         // the thread less than its wall time).
         let mut x = 0u64;
-        let busy = std::time::Instant::now();
+        let busy = crate::Instant::now();
         let worked = loop {
             x = std::hint::black_box(x.wrapping_mul(31).wrapping_add(7));
             let worked = super::thread_cpu().unwrap() - start - slept;

@@ -5,7 +5,14 @@ use crate::{
     hud::{HudAtlas, HudBatch, Rect, rgba},
     text::Text,
 };
-use std::{collections::HashMap, path::Path, sync::RwLock, time::Instant};
+use std::{collections::HashMap, path::Path, sync::RwLock};
+
+/// The text fields' timers: `web_time` on wasm (the client passes
+/// `web_time::Instant` there — winit's clock), `std` elsewhere.
+#[cfg(target_arch = "wasm32")]
+use web_time::Instant;
+#[cfg(not(target_arch = "wasm32"))]
+use crate::Instant;
 
 /// `GuiSpriteScaling.NineSlice`: the sprite's size in GUI pixels, whatever
 /// its texture's resolution, its borders (left, top, right, bottom) in the

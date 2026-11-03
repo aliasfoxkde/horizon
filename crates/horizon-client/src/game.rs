@@ -108,6 +108,8 @@ mod decorated_pot;
 mod dedicated;
 mod deflect;
 mod dialogs;
+// Rich Presence needs a local socket to the Discord app; none on the browser.
+#[cfg(not(target_arch = "wasm32"))]
 mod discord;
 mod dispense_fixture;
 mod dispenser;
@@ -394,8 +396,9 @@ use std::{
         mpsc::{Receiver, TryRecvError},
     },
     thread::JoinHandle,
-    time::{Duration, Instant},
+    time::Duration,
 };
+use horizon_client::Instant;
 use winit::{
     application::ApplicationHandler,
     error::EventLoopError,
@@ -2173,7 +2176,7 @@ struct Game<'a> {
     /// When `resourcepacks/` was last looked at for the open pack screen, and what it held
     /// (`watch_pack_folder`).
     pack_folder: Option<(
-        std::time::Instant,
+        crate::Instant,
         Vec<(String, u64, Option<std::time::SystemTime>)>,
     )>,
     /// A pack reload staged on a worker (`LoadingOverlay`): the frame draws
@@ -2248,7 +2251,7 @@ struct Game<'a> {
     /// The wheel and hovered slot of `BundleMouseActions`.
     bundle_mouse: bundles::BundleMouse,
     /// The last inventory click, for the double click that gathers a stack.
-    last_inv_click: Option<(std::time::Instant, usize, bool)>,
+    last_inv_click: Option<(crate::Instant, usize, bool)>,
     /// `lastQuickMoved`: what the last Shift click moved, which a Shift
     /// double click moves every stack of.
     last_quick_moved: Option<ItemStack>,
@@ -2419,7 +2422,7 @@ struct Game<'a> {
     /// An open book, book and quill or lectern screen.
     book: Option<books::BookScreen>,
     /// The last click on the book screen, for double clicks.
-    book_last_click: Option<std::time::Instant>,
+    book_last_click: Option<crate::Instant>,
     /// Lecterns whose page-turn pulse is running (ticks left).
     lectern_pulses: Vec<((i32, i32, i32), i32)>,
     /// LevelLoadingScreen.smoothedProgress while the player is not placed yet.
@@ -2428,7 +2431,7 @@ struct Game<'a> {
     /// while the title says `createWorld.preparing`.
     creation_job: Option<std::thread::JoinHandle<std::result::Result<(), String>>>,
     /// When `loading_progress` last eased (the server thread's load, 50 ms a step).
-    loading_progress_at: Option<std::time::Instant>,
+    loading_progress_at: Option<crate::Instant>,
     /// The world spawn search's origin chunk and fallback height, once known.
     spawn_origin: Option<((i32, i32), i32)>,
     spawn_spiral: horizon_client::world_spawn::ChunkSpiral,
@@ -2799,7 +2802,7 @@ struct Game<'a> {
     /// The game tests read so far, by id (the test instance registry).
     test_defs: std::cell::RefCell<HashMap<String, Option<test_instances::TestDef>>>,
     /// `GameTestBlockHighlightRenderer.markers`: block, text, removal time.
-    test_highlights: HashMap<(i32, i32, i32), (String, std::time::Instant)>,
+    test_highlights: HashMap<(i32, i32, i32), (String, crate::Instant)>,
     /// `GameTestTicker.SINGLETON`: the game tests running on this server.
     game_tests: game_tests::GameTests,
     /// KeyboardHandler's debug key state (game/debug_keys.rs), the physical
@@ -10023,7 +10026,7 @@ impl Game<'_> {
             && shift
             && slot != 200
         {
-            let now = std::time::Instant::now();
+            let now = crate::Instant::now();
             let double = self.last_inv_click.is_some_and(|(at, last, was_right)| {
                 last == slot && was_right == right && now.duration_since(at).as_millis() < 250
             });
@@ -10067,7 +10070,7 @@ impl Game<'_> {
         {
             // An item tab's display slots take no drags or PICKUP_ALL.
             let display = slot >= Creative::DISPLAY;
-            let now = std::time::Instant::now();
+            let now = crate::Instant::now();
             let double = !shift
                 && !right
                 && !display
@@ -17780,6 +17783,7 @@ impl Game<'_> {
                     self.heal_hold_latches();
                     // For the "I'm playing" ping: an atomic, sent on when it changes.
                     horizon_client::heartbeat::set_lan(self.is_published());
+                    #[cfg(not(target_arch = "wasm32"))]
                     self.update_discord_presence();
                     let steps = self.clock.advance(elapsed);
                     // The world ticking in the frame: once its ticks took a
@@ -20146,6 +20150,7 @@ fn run_event_loop(mut game: Game<'_>) -> Result<()> {
     narrator::stop();
     leave_fullscreen_after(&result, &mut game.settings);
     result?;
+    #[cfg(not(target_arch = "wasm32"))]
     horizon_client::discord_presence::stop();
     write_report(&game)?;
     if let Some(e) = game.error.take() {
@@ -20616,6 +20621,7 @@ fn run_loading(
         App::Loading(loading) => leave_fullscreen_after(&result, &mut loading.settings),
     }
     result?;
+    #[cfg(not(target_arch = "wasm32"))]
     horizon_client::discord_presence::stop();
     match app {
         App::Ready(mut split) => {
@@ -20700,6 +20706,7 @@ pub fn run_with() -> Result<()> {
             || options.offscreen
             || options.frames.is_some()
             || options.world_frames.is_some();
+        #[cfg(not(target_arch = "wasm32"))]
         horizon_client::discord_presence::start(early_settings.extras.discord_presence, automated);
     }
     // Snapshots of derived tables live in the game folder, never beside the

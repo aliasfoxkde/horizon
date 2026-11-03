@@ -236,10 +236,10 @@ pub struct Resolver {
     entries: std::collections::HashMap<NameOrId, Entry>,
     done: std::sync::mpsc::Receiver<(NameOrId, Option<ResolvedProfile>)>,
     send: std::sync::mpsc::Sender<(NameOrId, Option<ResolvedProfile>)>,
-    last_sweep: std::time::Instant,
+    last_sweep: crate::Instant,
 }
 struct Entry {
-    touched: std::time::Instant,
+    touched: crate::Instant,
     /// `None` while the fetch is in flight.
     resolved: Option<Option<ResolvedProfile>>,
 }
@@ -303,7 +303,7 @@ impl Resolver {
             entries: Default::default(),
             done,
             send,
-            last_sweep: std::time::Instant::now(),
+            last_sweep: crate::Instant::now(),
         }
     }
     /// `CacheBuilder.expireAfterAccess` with `maximumSize`.
@@ -311,7 +311,7 @@ impl Resolver {
         if self.last_sweep.elapsed() < std::time::Duration::from_secs(30) {
             return;
         }
-        self.last_sweep = std::time::Instant::now();
+        self.last_sweep = crate::Instant::now();
         self.entries
             .retain(|_, e| e.touched.elapsed() < PROFILE_TTL);
         while self.entries.len() > MAX_PROFILES
@@ -330,14 +330,14 @@ impl Resolver {
             self.entries.insert(
                 key,
                 Entry {
-                    touched: std::time::Instant::now(),
+                    touched: crate::Instant::now(),
                     resolved: Some(resolved),
                 },
             );
         }
         self.sweep();
         if let Some(entry) = self.entries.get_mut(key) {
-            entry.touched = std::time::Instant::now();
+            entry.touched = crate::Instant::now();
             return match &entry.resolved {
                 Some(resolved) => Resolve::Done(resolved.clone()),
                 None => Resolve::Pending,
@@ -349,7 +349,7 @@ impl Resolver {
         self.entries.insert(
             key.clone(),
             Entry {
-                touched: std::time::Instant::now(),
+                touched: crate::Instant::now(),
                 resolved: resolved.then_some(None),
             },
         );

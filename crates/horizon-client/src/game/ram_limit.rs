@@ -3,7 +3,7 @@
 use super::Game;
 use horizon_client::ram_limit::{self, Step};
 use horizon_client::text::Text;
-use std::time::Instant;
+use crate::Instant;
 
 impl Game<'_> {
     /// The render distance in use: the player's, unless memory holds it lower.

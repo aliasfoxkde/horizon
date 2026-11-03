@@ -288,7 +288,7 @@ fn download_file_within(
 }
 fn rand_suffix() -> u64 {
     use std::hash::{BuildHasher, RandomState};
-    RandomState::new().hash_one(std::time::Instant::now())
+    RandomState::new().hash_one(crate::Instant::now())
 }
 /// `downloadAndHash`: write what comes, at most `max_size` bytes.
 fn save_hashed(
@@ -506,7 +506,7 @@ mod tests {
             url,
             sha1: None,
         };
-        let started = std::time::Instant::now();
+        let started = crate::Instant::now();
         let result = download_file_within(
             &dir,
             &request,

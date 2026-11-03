@@ -2409,7 +2409,7 @@ mod entity_collision_tests {
                 Aabb::new(Vec3::new(x, 64.0, z), Vec3::new(x + 0.25, 64.25, z + 0.25))
             })
             .collect();
-        let start = std::time::Instant::now();
+        let start = crate::Instant::now();
         let mut hits = 0;
         for item in &items {
             let area = item.inflate(Vec3::new(1.0, 1.0, 1.0));
@@ -2417,7 +2417,7 @@ mod entity_collision_tests {
         }
         let scan = start.elapsed();
         let grid = ObstacleGrid::new(boxes);
-        let start = std::time::Instant::now();
+        let start = crate::Instant::now();
         let (mut out, mut found) = (Vec::new(), 0);
         for item in &items {
             grid.near(item.inflate(Vec3::new(1.0, 1.0, 1.0)), &mut out);

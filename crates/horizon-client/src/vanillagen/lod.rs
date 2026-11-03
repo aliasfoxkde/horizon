@@ -786,14 +786,14 @@ mod tests {
         }
         let key = (-64, 0);
         sampler.request_detail(&[key], [-1024, 0]);
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        let deadline = crate::Instant::now() + std::time::Duration::from_secs(30);
         let generated = loop {
             if let Some((_, columns)) = sampler.drain_details().into_iter().find(|(k, _)| *k == key)
             {
                 break columns;
             }
             assert!(
-                std::time::Instant::now() < deadline,
+                crate::Instant::now() < deadline,
                 "decoration worker stalled"
             );
             std::thread::sleep(std::time::Duration::from_millis(5));
@@ -852,7 +852,7 @@ mod tests {
         );
         drop(sampler);
         let mut worker = terrain.generator.worker();
-        let started = std::time::Instant::now();
+        let started = crate::Instant::now();
         for x in 0..BATCH {
             for z in 0..BATCH {
                 decorated_region(&mut worker, (key.0 + x, key.1 + z), &AtomicBool::new(false))?
@@ -860,7 +860,7 @@ mod tests {
             }
         }
         let separate = started.elapsed();
-        let started = std::time::Instant::now();
+        let started = crate::Instant::now();
         let mut emitted = FxHashMap::default();
         let region = decorated_batch(&mut worker, key, BATCH, &AtomicBool::new(false), |chunk| {
             let pos = chunk.position();

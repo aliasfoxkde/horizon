@@ -26,6 +26,7 @@
 //! N-1 players without one join once P1 is in its world, as P2, P3... (`HORIZON_SPLIT=1`: only
 //! the controllers). The player in seat N takes `horizon-ctl` on P1's socket path + "N".
 
+use crate::Instant;
 use super::{
     Game, UiResources, build_renderer,
     pad::{PadId, PadRouter},
@@ -38,7 +39,7 @@ use std::{
     cell::RefCell,
     path::{Path, PathBuf},
     sync::Arc,
-    time::{Duration, Instant},
+    time::Duration,
 };
 use winit::{
     application::ApplicationHandler,

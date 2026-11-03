@@ -403,7 +403,7 @@ pub struct Title {
     pub saves: PathBuf,
     /// The prepared resource root: the flat preset list and block registry.
     resources: PathBuf,
-    pub started: std::time::Instant,
+    pub started: crate::Instant,
     search: String,
     search_focused: bool,
     /// The focused text field's cursor, selection and scroll.
@@ -445,7 +445,7 @@ pub struct Title {
     /// `SplashManager.getSplash` rolled the player's own name instead of a list entry.
     splash_you: bool,
     /// The saves listed for Home, re-read every couple of seconds.
-    recent: std::cell::RefCell<Option<(std::time::Instant, Vec<WorldEntry>)>>,
+    recent: std::cell::RefCell<Option<(crate::Instant, Vec<WorldEntry>)>>,
     /// WorldCreationGameRulesScreen, over Create New World while it is open.
     rules: RefCell<Option<RulesScreen>>,
     /// The onboarding screen has run out: the owner saves `onboardAccessibility` as false.
@@ -703,7 +703,7 @@ impl Title {
             (today.month(), today.day()),
         );
         let mode = Mode::Main;
-        let now = std::time::Instant::now();
+        let now = crate::Instant::now();
         Self {
             mode,
             last_server: String::new(),
@@ -1151,7 +1151,7 @@ impl Title {
     }
     /// Polling is done once per rendered frame so filesystem work never blocks drawing.
     pub fn poll_backup(&mut self) {
-        self.poll_onboarding(std::time::Instant::now());
+        self.poll_onboarding(crate::Instant::now());
         self.poll_account();
         self.poll_optimize();
         if !self.backup_shown.get() {
@@ -1575,7 +1575,7 @@ impl Title {
             Some((at, worlds)) if at.elapsed().as_secs() < 2 => worlds.clone(),
             _ => {
                 let worlds = list_worlds(&self.saves);
-                *recent = Some((std::time::Instant::now(), worlds.clone()));
+                *recent = Some((crate::Instant::now(), worlds.clone()));
                 worlds
             }
         }

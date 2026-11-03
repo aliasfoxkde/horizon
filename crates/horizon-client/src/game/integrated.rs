@@ -10,6 +10,7 @@
 //! `HORIZON_SERVER_THREAD=0`) runs the world in the frame instead. That path
 //! is DEPRECATED: never use it, it gets no fixes and will be removed soon.
 //! LAN guests and dedicated servers use the same code either way.
+use crate::Instant;
 use super::{
     Dim, Game, Options, PackResources, Resources, UiResources, WorldIcon,
     execution_role::ExecutionRole,
@@ -35,7 +36,7 @@ use std::{
         mpsc::{Receiver, Sender, channel, sync_channel},
     },
     thread::JoinHandle,
-    time::{Duration, Instant},
+    time::Duration,
 };
 
 /// `LevelLoadProgressTracker.EXPECTED_PLAYER_CHUNKS`: the 7x7 chunks around the spawn.

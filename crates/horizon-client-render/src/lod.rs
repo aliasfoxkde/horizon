@@ -922,7 +922,7 @@ pub struct Lod {
     pending: FxHashSet<TileKey>,
     detail_masks: FxHashMap<TileKey, [u64; 4]>,
     detail_request_pending: bool,
-    detail_request_at: std::time::Instant,
+    detail_request_at: crate::Instant,
     /// Four threads or fewer: far work waits for the near terrain (`hold`).
     small: bool,
     /// Sample jobs that may be queued or running at once.
@@ -930,9 +930,9 @@ pub struct Lod {
     /// The near terrain is loading (`set_near_loading`).
     near_loading: bool,
     /// When `request_samples` last started a job while held.
-    held_sample_at: std::time::Instant,
+    held_sample_at: crate::Instant,
     /// Tiles whose sampling failed, and when they may be asked again.
-    retry: FxHashMap<TileKey, std::time::Instant>,
+    retry: FxHashMap<TileKey, crate::Instant>,
     /// Each tile's samples, shared with mesh jobs in flight.
     ready: FxHashMap<TileKey, Arc<Vec<Column>>>,
     /// Fully covered subtrees, by tile.
@@ -1269,11 +1269,11 @@ impl Lod {
             pending: FxHashSet::default(),
             detail_masks: FxHashMap::default(),
             detail_request_pending: false,
-            detail_request_at: std::time::Instant::now(),
+            detail_request_at: crate::Instant::now(),
             small: cores <= 4,
             sample_jobs: sampling_threads(cores) * QUEUED_PER_SAMPLER,
             near_loading: false,
-            held_sample_at: std::time::Instant::now(),
+            held_sample_at: crate::Instant::now(),
             retry: FxHashMap::default(),
             ready: FxHashMap::default(),
             complete: FxHashMap::default(),
@@ -1729,7 +1729,7 @@ impl Lod {
     fn finish_sample(&mut self, key: TileKey, samples: Vec<Column>) {
         self.pending.remove(&key);
         if samples.len() != CELLS * CELLS {
-            let now = std::time::Instant::now();
+            let now = crate::Instant::now();
             if self.retry.len() > 4096 {
                 self.retry.retain(|_, at| *at > now);
             }
@@ -1801,7 +1801,7 @@ impl Lod {
                 })
             }));
             // A sample may still be running: the held pace starts from now.
-            self.held_sample_at = std::time::Instant::now();
+            self.held_sample_at = crate::Instant::now();
         }
         self.near_loading = loading;
         let held = self.held();
@@ -1826,7 +1826,7 @@ impl Lod {
         {
             return;
         }
-        self.detail_request_at = std::time::Instant::now();
+        self.detail_request_at = crate::Instant::now();
         let mut keys: Vec<_> = self
             .active
             .iter()
@@ -2326,7 +2326,7 @@ impl Lod {
         if free == 0 {
             return;
         }
-        let now = std::time::Instant::now();
+        let now = crate::Instant::now();
         if self.held() {
             self.held_sample_at = now;
         }
@@ -3261,13 +3261,13 @@ mod tests {
         // As a replan does (`update` only selects after a change).
         lod.reselect = true;
         let await_meshes = |lod: &mut Lod| {
-            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+            let deadline = crate::Instant::now() + std::time::Duration::from_secs(5);
             loop {
                 let meshes = lod.update(camera, 2, 64, None);
                 if !meshes.is_empty() {
                     return meshes;
                 }
-                assert!(std::time::Instant::now() < deadline, "mesh worker stalled");
+                assert!(crate::Instant::now() < deadline, "mesh worker stalled");
                 std::thread::sleep(std::time::Duration::from_millis(1));
             }
         };
@@ -3308,14 +3308,14 @@ mod tests {
             .insert(covered_fine, Arc::new(vec![Column::default(); 256]));
         lod.covered.insert((-1, -2));
         lod.reselect = true;
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+        let deadline = crate::Instant::now() + std::time::Duration::from_secs(5);
         loop {
             lod.update(camera, 2, 64, None);
             if lod.outstanding_meshes == 0 && lod.active.is_empty() {
                 break;
             }
             assert!(
-                std::time::Instant::now() < deadline,
+                crate::Instant::now() < deadline,
                 "covered normal chunk remained an active LOD mask"
             );
             std::thread::sleep(std::time::Duration::from_millis(1));
@@ -3417,7 +3417,7 @@ mod tests {
         lod.detail_masks.clear();
         lod.covered = [(0, 0)].into_iter().collect();
         lod.detail_request_pending = false;
-        lod.detail_request_at = std::time::Instant::now() - std::time::Duration::from_secs(1);
+        lod.detail_request_at = crate::Instant::now() - std::time::Duration::from_secs(1);
         lod.request_detail([0, 0]);
         let Some(Job::RequestDetail { chunks, .. }) = lod.shared.jobs.lock().unwrap().pop_front()
         else {

@@ -135,16 +135,16 @@ pub struct NativeFrame {
     /// is drawn and `has_reflection` stays 0.
     pub reflects: bool,
     /// Last frame's view-projection, camera and time (`write`).
-    last: Option<([[f32; 4]; 4], glam::DVec3, std::time::Instant)>,
+    last: Option<([[f32; 4]; 4], glam::DVec3, crate::Instant)>,
     /// The eased eye light (block, sky) and being in water and lava (`write`); NaN until the
     /// first frame sets them.
     eye: [f32; 4],
     /// A post stage must use black history after a long gap until it has rendered a frame.
     history_reset: bool,
-    start: std::time::Instant,
+    start: crate::Instant,
     frames: u32,
     /// `frame.wetness`, and when it was last written.
-    wetness: (f32, Option<std::time::Instant>),
+    wetness: (f32, Option<crate::Instant>),
 }
 
 /// A depth texture of `size` the world's depth is copied into.
@@ -350,7 +350,7 @@ impl NativeFrame {
             last: None,
             eye: [f32::NAN; 4],
             history_reset: true,
-            start: std::time::Instant::now(),
+            start: crate::Instant::now(),
             frames: 0,
             wetness: (0.0, None),
         }
@@ -510,7 +510,7 @@ impl NativeFrame {
     /// Writes this frame's inputs, for a world of `size`.
     pub fn write(&mut self, queue: &wgpu::Queue, frame: &Frame, size: [u32; 2]) {
         let seconds = self.start.elapsed().as_secs_f32() % 3600.0;
-        let now = std::time::Instant::now();
+        let now = crate::Instant::now();
         let since = self.wetness.1.map_or(0.0, |t| (now - t).as_secs_f32());
         self.wetness = (wetness(self.wetness.0, frame.pack.rain, since), Some(now));
         let mut inputs = frame_inputs(

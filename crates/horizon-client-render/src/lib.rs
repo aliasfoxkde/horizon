@@ -1,6 +1,13 @@
 //! The client's world data, rendering and screens: chunks, meshing, light, streaming, the renderer,
 //! the HUD, menus and settings. Gameplay (horizon-client) builds on it; nothing here reaches gameplay.
 #![forbid(unsafe_code)]
+
+/// The frame timers' instant: `web_time` on wasm (the client passes
+/// `web_time::Instant` there — winit's clock), `std` elsewhere.
+#[cfg(target_arch = "wasm32")]
+pub use web_time::Instant;
+#[cfg(not(target_arch = "wasm32"))]
+pub use std::time::Instant;
 pub mod assets;
 pub mod atlas_sources;
 pub mod audio;

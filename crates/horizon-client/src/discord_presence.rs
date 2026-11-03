@@ -10,7 +10,8 @@ use std::io::{self, Read, Write};
 use std::path::PathBuf;
 use std::sync::{Condvar, Mutex, OnceLock};
 use std::thread::Thread;
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use crate::Instant;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use serde_json::{Value, json};
 

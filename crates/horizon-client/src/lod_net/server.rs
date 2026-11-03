@@ -2,6 +2,7 @@
 //! ([`Service::request`]), the one background thread that samples the tiles
 //! admitted, every player in turn, and the replies it hands back to the game
 //! thread ([`Service::deliver`]), which sends them with its own packets.
+use crate::Instant;
 use super::{
     Bucket, IN_FLIGHT, MAX_DISTANCE, Offer, PER_SECOND, Request, SIDE, encode_reply, refusal,
 };
@@ -11,7 +12,7 @@ use std::{
     panic::{AssertUnwindSafe, catch_unwind},
     sync::{Arc, Condvar, Mutex, MutexGuard, PoisonError},
     thread,
-    time::Instant,
+
 };
 
 /// Tiles the server lets a player ask for at once, past [`PER_SECOND`]: the

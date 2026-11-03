@@ -222,7 +222,7 @@ impl Game<'_> {
     /// seconds with its position relative to the test.
     pub(super) fn highlight_test_pos(&mut self, absolute: [i32; 3], relative: [i32; 3]) {
         let text = format!("{}, {}, {}", relative[0], relative[1], relative[2]);
-        let until = std::time::Instant::now() + std::time::Duration::from_millis(10_000);
+        let until = crate::Instant::now() + std::time::Duration::from_millis(10_000);
         self.test_highlights
             .insert((absolute[0], absolute[1], absolute[2]), (text, until));
     }
@@ -240,7 +240,7 @@ impl Game<'_> {
         use horizon_client::gizmos as g;
         // `GameTestBlockHighlightRenderer.emitGizmos`: expired highlights go,
         // the rest are a green box with the relative position over it.
-        let now = std::time::Instant::now();
+        let now = crate::Instant::now();
         self.test_highlights.retain(|_, (_, until)| now <= *until);
         let mut markers: Vec<(_, _, u32)> = self
             .test_highlights

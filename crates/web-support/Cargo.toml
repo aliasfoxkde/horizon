@@ -1,0 +1,14 @@
+[package]
+name = "web-support"
+version = "0.1.0"
+edition = "2021"
+description = "Web (wasm32) plumbing: exists so feature unification turns on the browser entropy backend for getrandom across the workspace when building for wasm32-unknown-unknown."
+
+[dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+getrandom02 = { package = "getrandom", version = "0.2", features = ["js"] }
+ring = { version = "0.17", features = ["wasm32_unknown_unknown_js"] }
+# rustls without "std" has no clock (UnixTime::now), which the TLS stack needs.
+# ring provider on wasm: aws-lc-sys cannot build for wasm32-unknown-unknown.
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12", "logging"] }
+rustls-pki-types = { version = "1", features = ["web", "std"] }

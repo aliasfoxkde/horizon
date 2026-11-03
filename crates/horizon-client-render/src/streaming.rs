@@ -1936,13 +1936,13 @@ impl Streaming {
             self.save_checked_out(written);
             return;
         }
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        let deadline = crate::Instant::now() + std::time::Duration::from_secs(30);
         while self.decorating > 0
             || !self.finishing.is_empty()
             || self.saving > 0
             || !self.viewing.is_empty()
         {
-            let left = deadline.saturating_duration_since(std::time::Instant::now());
+            let left = deadline.saturating_duration_since(crate::Instant::now());
             match self.shared.done.recv_timeout(left) {
                 Some(Done::Decorated(x, z, region, finals, writes)) => {
                     self.receive_decorated(x, z, *region, finals, writes, world)
@@ -1974,7 +1974,7 @@ impl Streaming {
     /// Proto snapshots are checked out to workers before chunk writes, just as
     /// in `save(true)`, so older generation cannot overwrite the final chunks.
     pub fn poll_save(&mut self, world: &mut World) -> bool {
-        let started = std::time::Instant::now();
+        let started = crate::Instant::now();
         while let Some(done) = self.shared.done.try_recv() {
             match done {
                 Done::Decorated(x, z, region, finals, writes) => {
@@ -2106,7 +2106,7 @@ const VIEW_WAIT: std::time::Duration = std::time::Duration::from_secs(30);
 #[derive(Default)]
 pub struct ViewArrival {
     view: ((i32, i32), i32),
-    since: Option<std::time::Instant>,
+    since: Option<crate::Instant>,
     arrived: bool,
 }
 impl ViewArrival {
@@ -2117,7 +2117,7 @@ impl ViewArrival {
     pub fn arriving(
         &mut self,
         view: ((i32, i32), i32),
-        now: std::time::Instant,
+        now: crate::Instant,
         has: impl Fn((i32, i32)) -> bool,
     ) -> bool {
         if self.since.is_none() || view != self.view {
@@ -2143,7 +2143,7 @@ impl ViewArrival {
     }
     /// Whether the view `arriving` was last given changed less than `VIEW_WAIT`
     /// ago: until then sections meshed are its terrain coming in, later an edit's.
-    pub fn recent(&self, now: std::time::Instant) -> bool {
+    pub fn recent(&self, now: crate::Instant) -> bool {
         self.since
             .is_some_and(|since| now.saturating_duration_since(since) < VIEW_WAIT)
     }
@@ -2429,9 +2429,9 @@ impl Ranges<'_> {
 impl Drop for Streaming {
     fn drop(&mut self) {
         // Saves in flight hold proto chunks nothing else would save.
-        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        let deadline = crate::Instant::now() + std::time::Duration::from_secs(30);
         while self.saving > 0 {
-            let left = deadline.saturating_duration_since(std::time::Instant::now());
+            let left = deadline.saturating_duration_since(crate::Instant::now());
             match self.shared.done.recv_timeout(left) {
                 Some(Done::Saved(_)) => self.saving -= 1,
                 Some(_) => {}
@@ -2715,7 +2715,7 @@ mod tests {
             .collect();
         assert_eq!(seqs, [1, 2]);
         assert!(mailbox.take().is_empty());
-        let waiting = std::time::Instant::now();
+        let waiting = crate::Instant::now();
         assert!(
             mailbox
                 .recv_timeout(std::time::Duration::from_millis(10))
@@ -2882,7 +2882,7 @@ mod tests {
     /// `VIEW_WAIT` at most, and one of no radius not at all.
     #[test]
     fn a_view_has_arrived_once_its_outermost_columns_are_in() {
-        let start = std::time::Instant::now();
+        let start = crate::Instant::now();
         let center = (3, -4);
         for r in 0..=16 {
             let view: FxHashSet<(i32, i32)> = (-r - 1..=r + 1)
@@ -3617,7 +3617,7 @@ mod cover_tests {
                 .collect();
             let rounds = 100;
             let time = |r: &Ranges| {
-                let t = std::time::Instant::now();
+                let t = crate::Instant::now();
                 let mut n = 0usize;
                 for _ in 0..rounds {
                     for &(x, z) in &columns {
@@ -3629,7 +3629,7 @@ mod cover_tests {
                 std::hint::black_box(n);
                 t.elapsed().as_secs_f64() * 1e3 / f64::from(rounds)
             };
-            let t = std::time::Instant::now();
+            let t = crate::Instant::now();
             for _ in 0..rounds {
                 std::hint::black_box(ExtraCover::new(std::hint::black_box(&extra)));
             }
